@@ -153,6 +153,66 @@ struct Client getPrimulClientDupaNume(struct Client* vector, int nrElemente, con
 		return vector;
 	}
 
+	struct Nod {
+		struct Client client;
+		struct Nod* next;
+	};
+
+	//inseraree nod nou in Lista la Sfarsit
+	void inserareListaSfarsit(struct Nod** cap, struct Client c) {
+		//toata lista e in heap, dar cap e in stack
+		//sageata se foloseste cand trebuie sa fac si deferentiere si pentru atriubuire;
+		struct Nod* nou = (struct Nod*)malloc(sizeof(struct Nod));
+		nou->client = c;
+		nou->client.nume = (char*)malloc(strlen(c.nume) + 1);
+		strcpy_s(nou->client.nume, strlen(c.nume) + 1, c.nume);
+		nou->next = NULL;
+		if (*cap) {
+			struct Nod* p = *cap;
+			while (p->next != NULL) {
+				p = p->next;
+			}
+			p->next = nou;
+		}
+		else {
+			//deferentiere
+			*cap = nou;
+		}
+	}
+
+	struct Nod* citireListaDinFisier(const char* numeFisier) {
+		struct Nod* cap = NULL;
+		FILE* f = fopen(numeFisier, "r");
+		if (f != NULL) {
+			while (!feof(f)) {
+				struct Client c = citireClientFisier(f);
+				inserareListaSfarsit(&cap, c);
+				free(c.nume);
+			}
+		}
+		fclose(f);
+		return cap;
+	}
+	//trebuie introdu in properies _crt_secure_no_warnings
+
+	//Nod** trimis in adresa, Nod* trimis prin valoare
+	void afisareLista(struct Nod* cap) {
+		while (cap) {
+			afisare(cap->client);
+			cap = cap->next;
+		}
+	}
+
+	//stergereLista
+	void stergereLista(struct Nod** cap) {
+		while ((*cap) != NULL) {
+			struct Nod* aux = *cap;
+			(*cap) = (*cap)->next;
+			free(aux->client.nume);
+			free(aux);
+		}
+	}
+
 int main() {
 
 	//struct Client client = initializare(2, 23, "Popescu", 2000, 'B');
@@ -191,11 +251,20 @@ int main() {
 		//struct Client c = citireClientFisier(f);
 		//afisare(c);
 
-	struct Client* clienti = NULL;
-	int nrClienti = 0;
-	clienti = citireVectorDinFisier("client.txt", &nrClienti);
-	afisareVector(clienti, nrClienti);
+	//CITIRE FISIER TOATA LISTA
+	//struct Client* clienti = NULL;
+	//int nrClienti = 0;
+	//clienti = citireVectorDinFisier("client.txt", &nrClienti);
+	//afisareVector(clienti, nrClienti);
 
+	struct Nod* cap = NULL;
+
+	cap = citireListaDinFisier("client.txt");
+	afisareLista(cap);
+	
+	stergereLista(&cap);
+	printf("Dupa stergere: ");
+	afisareLista(cap);
 
 	return 0;
 }
